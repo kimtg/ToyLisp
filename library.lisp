@@ -37,6 +37,8 @@
 
 (define (cadr x) (car (cdr x)))
 
+(defmacro (and a b) (list 'if a b nil))
+
 (defmacro (quasiquote x)
   (if (pair? x)
       (if (eq? (car x) 'unquote)
