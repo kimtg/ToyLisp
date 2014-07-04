@@ -11,6 +11,7 @@ Enhancements:
 * Built-in symbol comparison
 * Windows support
 * Multiple expressions in the REPL
+* C++ compliance
 
 ## License ##
 
