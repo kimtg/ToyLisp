@@ -61,6 +61,7 @@ Error eval_do_exec(Atom *stack, Atom *expr, Atom *env);
 Error eval_do_bind(Atom *stack, Atom *expr, Atom *env);
 Error eval_do_apply(Atom *stack, Atom *expr, Atom *env, Atom *result);
 Error eval_expr(Atom expr, Atom env, Atom *result);
+void print_err(Error err);
 
 #define car(p) ((p).value.pair->atom[0])
 #define cdr(p) ((p).value.pair->atom[1])
@@ -736,8 +737,10 @@ char *slurp(const char *path)
 	long len;
 
 	file = fopen(path, "rb");
-	if (!file)
+	if (!file) {
+		printf("Reading %s filed.\n", path);
 		return NULL;
+	}
 	fseek(file, 0, SEEK_END);
 	len = ftell(file);
 	fseek(file, 0, SEEK_SET);
@@ -766,32 +769,15 @@ void load_file(Atom env, const char *path)
 			Atom result;
 			Error err = eval_expr(expr, env, &result);
 			if (err) {
+				print_err(err);
 				printf("Error in expression:\n\t");
-				print_expr(expr);
-				switch (err) {
-				case Error_OK:
-					print_expr(result);
-					putchar('\n');
-					break;
-				case Error_Syntax:
-					puts("Syntax error");
-					break;
-				case Error_Unbound:
-					puts("Symbol not bound");
-					break;
-				case Error_Args:
-					puts("Wrong number of arguments");
-					break;
-				case Error_Type:
-					puts("Wrong type");
-					break;
-				}
+				print_expr(expr);				
 				putchar('\n');
-			}
+			}			
 			else {
 				print_expr(result);
 				putchar('\n');
-			}
+			}			
 		}
 		free(text);
 	}
@@ -1140,6 +1126,24 @@ Error eval_expr(Atom expr, Atom env, Atom *result)
 	return err;
 }
 
+void print_err(Error err) {
+	switch (err) {
+	case Error_OK:
+		break;
+	case Error_Syntax:
+		puts("Syntax error");
+		break;
+	case Error_Unbound:
+		puts("Symbol not bound");
+		break;
+	case Error_Args:
+		puts("Wrong number of arguments");
+		break;
+	case Error_Type:
+		puts("Wrong type");
+		break;
+	}
+}
 
 int main(int argc, char **argv)
 {
@@ -1185,32 +1189,17 @@ int main(int argc, char **argv)
 		while (!nilp(expr)) {
 			if (!err)
 				err = eval_expr(car(expr), env, &result);
-
-			switch (err) {
-			case Error_OK:
+			if (err)
+				print_err(err);
+			else {
 				print_expr(result);
 				putchar('\n');
-				break;
-			case Error_Syntax:
-				puts("Syntax error");
-				break;
-			case Error_Unbound:
-				puts("Symbol not bound");
-				break;
-			case Error_Args:
-				puts("Wrong number of arguments");
-				break;
-			case Error_Type:
-				puts("Wrong type");
-				break;
-			}
+			}				
 			expr = cdr(expr);
 		}
 
 		free(buf);
 		free(input);
-		gc_mark(env);
-		gc();
 	}
 
 	return 0;
